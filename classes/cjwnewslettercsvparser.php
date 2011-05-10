@@ -32,7 +32,8 @@ class CjwNewsletterCsvParser
         $rowArray = array();
         $c = 0;
         $row = array();
-        $firstRow = array( 'email', 'first_name', 'last_name', 'salutation' );
+        $cjwNewsletterINI = eZINI::instance( 'cjw_newsletter.ini' ); 
+        $firstRow = $cjwNewsletterINI->variable( 'NewsletterCSVSettings', 'Fields' );
 
         if ( $firstRowIsLabel == true )
         {
