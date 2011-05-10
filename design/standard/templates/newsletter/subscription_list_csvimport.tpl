@@ -243,18 +243,11 @@ list all blacklist items
                                         <th class="tight">
                                             {'Row nr'|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
                                         </th>
+                                        {foreach $fields as $field}
                                         <th class="tight">
-                                            {'Email'|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
+                                            {ezini( concat( 'NewsletterCSVField_', $field ), 'Label', 'cjw_newsletter.ini' )|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
                                         </th>
-                                        <th class="tight">
-                                            {'First name'|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
-                                        </th>
-                                        <th class="tight">
-                                            {'Last name'|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
-                                        </th>
-                                        <th class="tight">
-                                            {'Salutation'|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
-                                        </th>
+                                        {/foreach}
                                         <th class="tight">
                                             {'Email ok'|i18n( 'cjw_newsletter/subscription_list_csvimport' )}
                                         </th>
