@@ -188,26 +188,24 @@ class CjwNewsletterUser extends eZPersistentObject
     /**
      * Create new CjwNewsletterUser object
      *
-     * @param string $email
-     * @param string $salutation
-     * @param string $firstName
-     * @param string $lastName
+     * @param array $attrs
      * @param string $eZUserId
      * @param int $status
      * @return object
      */
-    static function create( $email, $salutation, $firstName, $lastName, $eZUserId, $status = CjwNewsletterUser::STATUS_PENDING, $context = 'default' )
+    static function create( $attrs, $eZUserId, $status = CjwNewsletterUser::STATUS_PENDING, $context = 'default' )
     {
         $rows = array( 'created' => time(),
                        'creator_contentobject_id' => eZUser::currentUserID(),
                        'ez_user_id' => $eZUserId,
-                       'email' => $email,
-                       'first_name' => $firstName,
-                       'last_name' => $lastName,
-                       'salutation' => $salutation,
                        'hash' => CjwNewsletterUtils::generateUniqueMd5Hash( $email ),
                        'remote_id' => 'cjwnl:'. $context .':' . CjwNewsletterUtils::generateUniqueMd5Hash( $email ),
                        'status' => $status );
+
+        foreach( $attrs as $key => $value )
+        {
+            $rows[$key] = $value;
+        }
 
         $object = new CjwNewsletterUser( $rows );
         return $object;
@@ -216,21 +214,15 @@ class CjwNewsletterUser extends eZPersistentObject
 
 
   /**
-   * Create or update Newsletter User identified by email
+   * Create or update Newsletter User identified by attrs['email']
    * store the changes to Database
    *
-   * @param string $email
-   * @param int $salutation
-   * @param string $firstName
-   * @param string $lastName
+   * @param array $attrs
    * @param int $eZUserId
    * @param int $newNewsletterUserStatus the status for new created Newsletter users CjwNewsletterUser::STATUS_PENDING
    * @return object
    */
-    static function createUpdateNewsletterUser( $email,
-                                                $salutation,
-                                                $firstName,
-                                                $lastName,
+    static function createUpdateNewsletterUser( $attrs,
                                                 $eZUserId,
                                                 $newNewsletterUserStatus = CjwNewsletterUser::STATUS_PENDING,
                                                 $context = 'default' )
@@ -240,43 +232,54 @@ class CjwNewsletterUser extends eZPersistentObject
          *      yes -> register on lists with status PENDING
          *      no -> create new user with status PENDIG and than register
          */
-        $existingNewsletterUserObject = CjwNewsletterUser::fetchByEmail( $email );
+        $existingNewsletterUserObject = CjwNewsletterUser::fetchByEmail( $attrs['email'] );
 
         // update existing
         if ( is_object( $existingNewsletterUserObject ) )
         {
             $userObject = $existingNewsletterUserObject;
-            $userObject->setAttribute('salutation', $salutation );
+            /*$userObject->setAttribute('salutation', $salutation );
             $userObject->setAttribute('first_name', $firstName );
-            $userObject->setAttribute('last_name', $lastName );
+            $userObject->setAttribute('last_name', $lastName );*/
+            $debuginfo = array( 'nl_user' => $userObject->attribute( 'id' ),
+                                'ez_user_id' => $userObject->attribute( 'ez_user_id' ),
+                                'status' => $userObject->attribute( 'status' ),
+                                'modifier' => eZUser::currentUserID(),
+                                'context' => $context );
+            foreach( $attrs as $key => $value )
+            {
+                if ( $key != 'email' )
+                    $userObject->setAttribute( $key, $value );
+                $debuginfo[$key] = $value;
+            }
             $userObject->setAttribute('ez_user_id', (int) $eZUserId );
             $userObject->setAttribute('modified', time() );
             $userObject->store();
+            
+            
             CjwNewsletterLog::writeDebug(
                                     'CjwNewsletterUser::createUpdateNewsletterUser',
                                     'user',
                                     'update',
-                                     array( 'nl_user' => $userObject->attribute( 'id' ),
-                                            'email' => $email,
-                                            'salutation' => $salutation,
-                                            'first_name' => $firstName,
-                                            'last_name' => $lastName,
-                                            'ez_user_id' => $userObject->attribute( 'ez_user_id' ),
-                                            'status' => $userObject->attribute( 'status' ),
-                                            'modifier' => eZUser::currentUserID(),
-                                            'context' => $context )
+                                     $debuginfo
                                       );
         }
         // create new object
         else
         {
-            $userObject = CjwNewsletterUser::create( $email,
-                                                     $salutation,
-                                                     $firstName,
-                                                     $lastName,
+            $userObject = CjwNewsletterUser::create( $attrs,
                                                      $eZUserId,
                                                      (int) $newNewsletterUserStatus,
                                                      $context );
+            $debuginfo = array( 'nl_user' => $userObject->attribute( 'id' ),
+                                'ez_user_id' => $userObject->attribute( 'ez_user_id' ),
+                                'status' => $userObject->attribute( 'status' ),
+                                'modifier' => eZUser::currentUserID(),
+                                'context' => $context );
+            foreach( $attrs as $key => $value )
+            {
+                $debuginfo[$key] = $value;
+            }
             if( is_object( $userObject ) !== true )
             {
                 // error creating the new user => user with same email already exists
@@ -288,15 +291,7 @@ class CjwNewsletterUser extends eZPersistentObject
                                     'CjwNewsletterUser::createUpdateNewsletterUser',
                                     'user',
                                     'create',
-                                     array( 'nl_user' => $userObject->attribute( 'id' ),
-                                            'email' => $email,
-                                            'salutation' => $salutation,
-                                            'first_name' => $firstName,
-                                            'last_name' => $lastName,
-                                            'ez_user_id' => $userObject->attribute( 'ez_user_id' ),
-                                            'status' => $userObject->attribute( 'status' ),
-                                            'modifier' => eZUser::currentUserID(),
-                                            'context' => $context )
+                                     $debuginfo
                                       );
 
         }
