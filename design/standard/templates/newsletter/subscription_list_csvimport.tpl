@@ -106,9 +106,17 @@ list all blacklist items
                             <input type="checkbox" name="FirstRowIsLabel" {if $first_row_is_label|eq(true())}checked="checked"{/if} />
                             {'First row is label'|i18n( 'cjw_newsletter/subscription_list_csvimport')}
 
-                                <pre>email;first_name;last_name;salutation
-user3@example.com;Julia;Mustermann;2
-user4@example.com;Max;Mustermann;1</pre>{* Output format. *}
+                                {def $fields = ezini( 'NewsletterCSVSettings', 'Fields', 'cjw_newsletter.ini' )}
+                                <pre>
+{foreach $fields as $index => $field}
+{ezini( concat( 'NewsletterCSVField_', $field ), 'Label', 'cjw_newsletter.ini' )|i18n( 'cjw_newsletter/subscription_list_csvimport' )}{cond( $index|lt( $fields|count|sub(1) ), ';', '')}
+{/foreach}
+ 
+
+{foreach ezini( 'NewsletterCSVSettings', 'Examples', 'cjw_newsletter.ini' ) as $example}
+{$example}
+
+{/foreach}</pre>{* Output format. *}{* Output format. *}
 
                             {* Output format. *}
                             <div class="block">
